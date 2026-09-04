@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public record ProductRequest(
         @NotBlank(message = "name is required")
@@ -28,5 +29,11 @@ public record ProductRequest(
         Integer stock,
 
         @NotNull(message = "status is required")
-        ProductStatus status) {
+        ProductStatus status,
+
+        UUID categoryId) {
+
+    public ProductRequest(String name, String sku, BigDecimal price, Integer stock, ProductStatus status) {
+        this(name, sku, price, stock, status, null);
+    }
 }

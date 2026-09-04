@@ -11,7 +11,8 @@ public record ProductResponse(
         String sku,
         BigDecimal price,
         Integer stock,
-        ProductStatus status) {
+        ProductStatus status,
+        UUID categoryId) {
 
     public static ProductResponse from(Product product) {
         return new ProductResponse(
@@ -20,6 +21,7 @@ public record ProductResponse(
                 product.getSku(),
                 product.getPrice(),
                 product.getStock(),
-                product.getStatus());
+                product.getStatus(),
+                product.getCategory() != null ? product.getCategory().getId() : null);
     }
 }

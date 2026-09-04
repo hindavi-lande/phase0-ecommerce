@@ -1,5 +1,7 @@
 package com.example.ecommerce.product;
 
+import com.example.ecommerce.category.Category;
+import com.example.ecommerce.category.CategoryRepository;
 import com.example.ecommerce.common.DuplicateResourceException;
 import com.example.ecommerce.common.ResourceInUseException;
 import com.example.ecommerce.common.ResourceNotFoundException;
@@ -17,10 +19,15 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ProductService(ProductRepository productRepository, OrderRepository orderRepository) {
+    public ProductService(
+            ProductRepository productRepository,
+            OrderRepository orderRepository,
+            CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Transactional
@@ -35,6 +42,7 @@ public class ProductService {
                 request.price(),
                 request.stock(),
                 request.status());
+        product.setCategory(resolveCategory(request.categoryId()));
 
         return ProductResponse.from(productRepository.save(product));
     }
@@ -62,6 +70,7 @@ public class ProductService {
         product.setPrice(request.price());
         product.setStock(request.stock());
         product.setStatus(request.status());
+        product.setCategory(resolveCategory(request.categoryId()));
 
         return ProductResponse.from(productRepository.save(product));
     }
@@ -82,5 +91,13 @@ public class ProductService {
     public Product findOrThrow(UUID id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
+    }
+
+    private Category resolveCategory(UUID categoryId) {
+        if (categoryId == null) {
+            return null;
+        }
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", categoryId));
     }
 }
