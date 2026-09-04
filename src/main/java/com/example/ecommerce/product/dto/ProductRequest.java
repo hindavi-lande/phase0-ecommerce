@@ -31,9 +31,14 @@ public record ProductRequest(
         @NotNull(message = "status is required")
         ProductStatus status,
 
-        UUID categoryId) {
+        @NotNull(message = "categoryId is required")
+        UUID categoryId,
 
-    public ProductRequest(String name, String sku, BigDecimal price, Integer stock, ProductStatus status) {
-        this(name, sku, price, stock, status, null);
+        @Size(max = 1000, message = "description must be at most 1000 characters")
+        String description) {
+
+    public ProductRequest(
+            String name, String sku, BigDecimal price, Integer stock, ProductStatus status, UUID categoryId) {
+        this(name, sku, price, stock, status, categoryId, null);
     }
 }

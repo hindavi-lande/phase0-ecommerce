@@ -39,9 +39,12 @@ public class Product {
     @Column(name = "status", nullable = false, length = 20)
     private ProductStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "category_id", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
+
+    @Column(name = "description", length = 1000)
+    private String description;
 
     protected Product() {
         // required by JPA
@@ -105,5 +108,13 @@ public class Product {
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

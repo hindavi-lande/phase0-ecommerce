@@ -7,6 +7,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.ecommerce.category.Category;
+import com.example.ecommerce.category.CategoryRepository;
 import com.example.ecommerce.common.DuplicateResourceException;
 import com.example.ecommerce.common.ResourceInUseException;
 import com.example.ecommerce.common.ResourceNotFoundException;
@@ -33,19 +35,28 @@ class ProductServiceTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private CategoryRepository categoryRepository;
+
     @InjectMocks
     private ProductService productService;
 
+    private UUID categoryId;
+    private Category category;
     private ProductRequest request;
 
     @BeforeEach
     void setUp() {
-        request = new ProductRequest("Wireless Mouse", "SKU-0001", new BigDecimal("29.99"), 100, ProductStatus.ACTIVE);
+        categoryId = UUID.randomUUID();
+        category = new Category("Peripherals", "Computer peripherals");
+        request = new ProductRequest(
+                "Wireless Mouse", "SKU-0001", new BigDecimal("29.99"), 100, ProductStatus.ACTIVE, categoryId);
     }
 
     @Test
     void createPersistsProduct() {
         when(productRepository.existsBySkuIgnoreCase("SKU-0001")).thenReturn(false);
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
         when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
 
         ProductResponse response = productService.create(request);
@@ -97,11 +108,13 @@ class ProductServiceTest {
         Product existing = new Product("Wireless Mouse", "SKU-0001", new BigDecimal("29.99"), 100, ProductStatus.ACTIVE);
         when(productRepository.findById(id)).thenReturn(Optional.of(existing));
         when(productRepository.existsBySkuIgnoreCaseAndIdNot("SKU-0099", id)).thenReturn(false);
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
         when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
 
         ProductResponse response = productService.update(
                 id,
-                new ProductRequest("Ergonomic Mouse", "SKU-0099", new BigDecimal("39.99"), 50, ProductStatus.INACTIVE));
+                new ProductRequest(
+                        "Ergonomic Mouse", "SKU-0099", new BigDecimal("39.99"), 50, ProductStatus.INACTIVE, categoryId));
 
         assertThat(response.name()).isEqualTo("Ergonomic Mouse");
         assertThat(response.sku()).isEqualTo("SKU-0099");

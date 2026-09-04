@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.example.ecommerce.category.Category;
+import com.example.ecommerce.category.CategoryRepository;
 import com.example.ecommerce.product.Product;
 import com.example.ecommerce.product.ProductRepository;
 import com.example.ecommerce.product.ProductStatus;
@@ -41,15 +43,22 @@ class OrderControllerIntegrationTest {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
     private UUID productId;
 
     @BeforeEach
     void seedProduct() {
         orderRepository.deleteAll();
         productRepository.deleteAll();
+        categoryRepository.deleteAll();
 
-        Product product = productRepository.save(
-                new Product("Wireless Mouse", "SKU-0001", new BigDecimal("29.99"), 100, ProductStatus.ACTIVE));
+        Category category = categoryRepository.save(new Category("Peripherals", "Computer peripherals"));
+
+        Product product = new Product("Wireless Mouse", "SKU-0001", new BigDecimal("29.99"), 100, ProductStatus.ACTIVE);
+        product.setCategory(category);
+        product = productRepository.save(product);
         productId = product.getId();
     }
 

@@ -43,6 +43,7 @@ public class ProductService {
                 request.stock(),
                 request.status());
         product.setCategory(resolveCategory(request.categoryId()));
+        product.setDescription(request.description());
 
         return ProductResponse.from(productRepository.save(product));
     }
@@ -71,6 +72,7 @@ public class ProductService {
         product.setStock(request.stock());
         product.setStatus(request.status());
         product.setCategory(resolveCategory(request.categoryId()));
+        product.setDescription(request.description());
 
         return ProductResponse.from(productRepository.save(product));
     }
@@ -94,9 +96,6 @@ public class ProductService {
     }
 
     private Category resolveCategory(UUID categoryId) {
-        if (categoryId == null) {
-            return null;
-        }
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", categoryId));
     }

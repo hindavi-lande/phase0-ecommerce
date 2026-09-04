@@ -38,22 +38,37 @@ class ProductControllerIntegrationTest {
     @Autowired
     private OrderRepository orderRepository;
 
+    private String categoryId;
+
     @BeforeEach
-    void clean() {
+    void clean() throws Exception {
         orderRepository.deleteAll();
         productRepository.deleteAll();
+
+        MvcResult created = mockMvc.perform(post("/api/categories")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Peripherals",
+                                  "description": "Computer peripherals"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn();
+        categoryId = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asText();
     }
 
-    private static String productJson(String sku) {
+    private String productJson(String sku) {
         return """
                 {
                   "name": "Wireless Mouse",
                   "sku": "%s",
                   "price": 29.99,
                   "stock": 100,
-                  "status": "ACTIVE"
+                  "status": "ACTIVE",
+                  "categoryId": "%s"
                 }
-                """.formatted(sku);
+                """.formatted(sku, categoryId);
     }
 
     @Test
@@ -90,9 +105,10 @@ class ProductControllerIntegrationTest {
                                   "sku": "SKU-0002",
                                   "price": 39.99,
                                   "stock": 50,
-                                  "status": "INACTIVE"
+                                  "status": "INACTIVE",
+                                  "categoryId": "%s"
                                 }
-                                """))
+                                """.formatted(categoryId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Ergonomic Mouse"))
                 .andExpect(jsonPath("$.sku").value("SKU-0002"))
@@ -127,7 +143,101 @@ class ProductControllerIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors.name").exists())
                 .andExpect(jsonPath("$.fieldErrors.price").exists())
-                .andExpect(jsonPath("$.fieldErrors.stock").exists());
+                .andExpect(jsonPath("$.fieldErrors.stock").exists())
+                .andExpect(jsonPath("$.fieldErrors.categoryId").exists());
+    }
+
+    @Test
+    void missingCategoryIdReturns400WithFieldError() throws Exception {
+        mockMvc.perform(post("/api/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Wireless Mouse",
+                                  "sku": "SKU-0001",
+                                  "price": 29.99,
+                                  "stock": 100,
+                                  "status": "ACTIVE"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.categoryId").exists());
+    }
+
+    @Test
+    void unknownCategoryIdReturns404() throws Exception {
+        mockMvc.perform(post("/api/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Wireless Mouse",
+                                  "sku": "SKU-0001",
+                                  "price": 29.99,
+                                  "stock": 100,
+                                  "status": "ACTIVE",
+                                  "categoryId": "33333333-3333-3333-3333-333333333333"
+                                }
+                                """))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void createAndUpdateWithDescription() throws Exception {
+        MvcResult created = mockMvc.perform(post("/api/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Wireless Mouse",
+                                  "sku": "SKU-0777",
+                                  "price": 29.99,
+                                  "stock": 100,
+                                  "status": "ACTIVE",
+                                  "categoryId": "%s",
+                                  "description": "A comfortable wireless mouse"
+                                }
+                                """.formatted(categoryId)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.description").value("A comfortable wireless mouse"))
+                .andReturn();
+
+        String id = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asText();
+
+        mockMvc.perform(put("/api/products/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Wireless Mouse",
+                                  "sku": "SKU-0777",
+                                  "price": 29.99,
+                                  "stock": 100,
+                                  "status": "ACTIVE",
+                                  "categoryId": "%s",
+                                  "description": "An updated description"
+                                }
+                                """.formatted(categoryId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.description").value("An updated description"));
+    }
+
+    @Test
+    void descriptionTooLongReturns400WithFieldError() throws Exception {
+        String longDescription = "x".repeat(1001);
+
+        mockMvc.perform(post("/api/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Wireless Mouse",
+                                  "sku": "SKU-0778",
+                                  "price": 29.99,
+                                  "stock": 100,
+                                  "status": "ACTIVE",
+                                  "categoryId": "%s",
+                                  "description": "%s"
+                                }
+                                """.formatted(categoryId, longDescription)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.description").exists());
     }
 
     @Test

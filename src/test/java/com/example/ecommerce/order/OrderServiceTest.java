@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.ecommerce.category.Category;
 import com.example.ecommerce.common.ResourceNotFoundException;
 import com.example.ecommerce.order.dto.OrderRequest;
 import com.example.ecommerce.order.dto.OrderResponse;
@@ -43,6 +44,7 @@ class OrderServiceTest {
     void setUp() {
         productId = UUID.randomUUID();
         product = new Product("Wireless Mouse", "SKU-0001", new BigDecimal("29.99"), 100, ProductStatus.ACTIVE);
+        product.setCategory(new Category("Peripherals", "Computer peripherals"));
         request = new OrderRequest(
                 "Ada Lovelace",
                 productId,
