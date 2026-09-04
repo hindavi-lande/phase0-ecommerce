@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.example.ecommerce.category.CategoryRepository;
 import com.example.ecommerce.order.OrderRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,12 +39,16 @@ class ProductControllerIntegrationTest {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
     private String categoryId;
 
     @BeforeEach
     void clean() throws Exception {
         orderRepository.deleteAll();
         productRepository.deleteAll();
+        categoryRepository.deleteAll();
 
         MvcResult created = mockMvc.perform(post("/api/categories")
                         .contentType(MediaType.APPLICATION_JSON)
